@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Eco-Tracker — Traccia le tue azioni sostenibili quotidiane. Progetto Capolavoro per l'Esame di Stato." />
+  <title>🌿 Eco-Tracker</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --forest:      #1B4332;
+      --green:       #2D6A4F;
+      --mid:         #40916C;
+      --light:       #52B788;
+      --pale:        #95D5B2;
+      --pale-bg:     #D8F3DC;
+      --cream:       #F8F5EF;
+      --cream-dark:  #EEE9DF;
+      --amber:       #D97706;
+      --text:        #1A2E1F;
+      --text-soft:   #4B5563;
+      --text-muted:  #9CA3AF;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: var(--cream);
+      background-image:
+        radial-gradient(ellipse 70% 50% at 15% 0%,   rgba(82,183,136,0.14) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 100%,  rgba(149,213,178,0.10) 0%, transparent 60%);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    h1, h2, h3, .display { font-family: 'Playfair Display', serif; }
+
+    /* HEADER */
+    .app-header {
+      background: rgba(248, 245, 239, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(45,106,79,0.10);
+    }
+
+    /* Tasto selettore classe */
+    .class-selector-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px 3px 8px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(45,106,79,0.25);
+      background: rgba(45,106,79,0.07);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .class-selector-btn:hover {
+      background: rgba(45,106,79,0.14);
+      border-color: rgba(45,106,79,0.40);
+    }
+    .class-selector-btn:active { transform: scale(0.96); }
+
+    /* TAB */
+    .tab-btn {
+      transition: background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
+      color: var(--text-soft);
+    }
+    .tab-btn.active {
+      background: var(--green);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(45,106,79,0.30);
+    }
+
+    .tab-content        { display: none; }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.30s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    /* ACTION CARDS */
+    .action-card {
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.30s ease;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .action-card:hover:not(.completed) {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(45,106,79,0.16);
+    }
+    .action-card:active:not(.completed) { transform: scale(0.98); }
+    .action-card.completed {
+      opacity: 0.55;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .action-check {
+      width: 28px; height: 28px;
+      border: 2px solid #D1D5DB;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.22s ease, border-color 0.22s ease;
+    }
+    .action-card.completed .action-check {
+      background: var(--light);
+      border-color: var(--light);
+    }
+    .action-check .check-icon {
+      opacity: 0; transform: scale(0);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .action-card.completed .action-check .check-icon {
+      opacity: 1; transform: scale(1);
+    }
+
+    /* BADGE CARDS */
+    .badge-card-germoglio { background: linear-gradient(145deg, #1B4332 0%, #2D6A4F 55%, #40916C 100%); }
+    .badge-card-albero    { background: linear-gradient(145deg, #065F46 0%, #059669 55%, #34D399 100%); }
+    .badge-card-custode   { background: linear-gradient(145deg, #1E3A5F 0%, #1D4ED8 55%, #3B82F6 100%); }
+
+    .bar-fill {
+      border-radius: 9999px;
+      transition: width 0.9s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    /* LEADERBOARD */
+    .lb-user-row {
+      background: linear-gradient(90deg, rgba(82,183,136,0.13), rgba(82,183,136,0.03));
+      border-left: 3px solid var(--light);
+    }
+
+    /* FLOATING POINTS */
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateY(0)     scale(1);   }
+      60%  { opacity: 1; transform: translateY(-30px)  scale(1.1); }
+      100% { opacity: 0; transform: translateY(-60px)  scale(1.2); }
+    }
+    .points-popup {
+      position: absolute; top: 6px; right: 56px;
+      pointer-events: none;
+      font-family: 'Playfair Display', serif;
+      font-weight: 900; font-size: 1.1rem;
+      color: var(--green); z-index: 10;
+      animation: floatUp 1.1s ease forwards;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 200;
+      padding: 0.65rem 1.25rem;
+      border-radius: 999px;
+      background: var(--forest); color: #fff;
+      font-weight: 700; font-size: 0.85rem;
+      white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(27,67,50,0.35);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* MODAL / BOTTOM SHEET */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.42);
+      z-index: 100;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding: 1rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-sheet {
+      background: #fff; border-radius: 1.5rem;
+      padding: 1.75rem 1.5rem;
+      width: 100%; max-width: 26rem;
+      transform: translateY(30px);
+      transition: transform 0.30s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 -4px 40px rgba(0,0,0,0.12);
+    }
+    .modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+    /* CARD SELETTORE CLASSE */
+    .class-option-card {
+      border: 2px solid #E5E7EB;
+      border-radius: 1rem;
+      padding: 0.9rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 0.75rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .class-option-card:hover { border-color: var(--light); background: rgba(82,183,136,0.05); }
+    .class-option-card:active { transform: scale(0.97); }
+    .class-option-card.selected {
+      border-color: var(--green);
+      background: rgba(45,106,79,0.07);
+    }
+    .class-option-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid #D1D5DB;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .class-option-card.selected .class-option-dot {
+      border-color: var(--green);
+      background: var(--green);
+    }
+    .class-option-dot-inner {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .class-option-card.selected .class-option-dot-inner { opacity: 1; }
+
+    /* POP ANIM */
+    @keyframes popIn {
+      0%   { transform: scale(0.75); opacity: 0; }
+      70%  { transform: scale(1.12); }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+    .pop-anim { animation: popIn 0.35s ease both; }
+
+    .sdg-pill {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 999px; font-size: 0.65rem;
+      font-weight: 700; color: #fff;
+    }
+
+    .podium-col { transition: transform 0.3s ease; }
+    .podium-col:hover { transform: translateY(-4px); }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--pale); border-radius: 3px; }
+  </style>
+</head>
+
+<body class="antialiased">
+
+  <!-- ============================================================
+       STICKY HEADER
+  ============================================================ -->
+  <header class="app-header sticky top-0 z-50">
+    <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+
+      <!-- Logo + selettore classe (cliccabile) -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+             style="background: linear-gradient(135deg, var(--forest), var(--mid));">
+          🌿
+        </div>
+        <div>
+          <h1 class="text-base leading-tight" style="color: var(--forest)">Eco-Tracker</h1>
+          <!-- Bottone selettore classe -->
+          <button class="class-selector-btn mt-0.5" onclick="openClassModal()" aria-label="Cambia classe">
+            <span class="text-xs font-bold" style="color: var(--green);" id="header-class-name">5BI</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 flex-shrink-0" fill="none"
+                 viewBox="0 0 24 24" stroke="var(--green)" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Punteggio totale + reset -->
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <p class="text-xs leading-tight" style="color: var(--text-muted)">Punti totali</p>
+          <p id="header-score" class="text-xl font-black leading-tight"
+             style="color: var(--green); font-family:'Playfair Display',serif;">0</p>
+        </div>
+        <button onclick="openResetModal()"
+          class="w-9 h-9 rounded-full border flex items-center justify-center transition-all hover:bg-red-50 hover:border-red-200"
+          style="border-color: var(--cream-dark);"
+          title="Reset / opzioni" aria-label="Apri opzioni di reset">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+               stroke="var(--text-muted)" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9
+                     m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       TAB BAR
+  ============================================================ -->
+  <div class="max-w-lg mx-auto px-4 pt-3 pb-1">
+    <nav class="flex gap-1.5 p-1 rounded-2xl" style="background: rgba(45,106,79,0.08);" role="tablist">
+      <button id="tab-azioni"
+        class="tab-btn active flex-1 py-2.5 px-2 rounded-xl text-sm font-bold"
+        onclick="switchTab('azioni')" role="tab" aria-selected="true">
+        🌱 Azioni
+      </button>
+      <button id="tab-progressi"
+        class="tab-btn flex-1 py-2.5 px-2 rounded-xl text-sm font-bold"
+        onclick="switchTab('progressi')" role="tab" aria-selected="false">
+        📊 Progressi
+      </button>
+      <button id="tab-classifica"
+        class="tab-btn flex-1 py-2.5 px-2 rounded-xl text-sm font-bold"
+        onclick="switchTab('classifica')" role="tab" aria-selected="false">
+        🏆 Classifica
+      </button>
+    </nav>
+  </div>
+
+  <!-- ============================================================
+       MAIN CONTENT
+  ============================================================ -->
+  <main class="max-w-lg mx-auto px-4 pb-28">
+
+    <!-- ======================================================
+         TAB 1 — AZIONI
+    ====================================================== -->
+    <section id="content-azioni" class="tab-content active pt-2" role="tabpanel">
+
+      <!-- Banner giornaliero -->
+      <div class="rounded-2xl p-4 mt-2 mb-4 relative overflow-hidden"
+           style="background: linear-gradient(145deg, var(--forest) 0%, var(--green) 60%, var(--mid) 100%);">
+        <div class="absolute -top-8 -right-8 w-28 h-28 rounded-full" style="background:rgba(255,255,255,0.06)"></div>
+        <div class="absolute -bottom-6 left-8 w-20 h-20 rounded-full" style="background:rgba(255,255,255,0.05)"></div>
+        <div class="relative flex items-start justify-between mb-3">
+          <p class="text-white font-bold text-sm opacity-90">Azioni di oggi</p>
+          <p id="today-date" class="text-white text-xs opacity-60"></p>
+        </div>
+        <div class="relative flex items-center gap-4">
+          <div>
+            <p id="daily-score" class="text-white font-black text-4xl leading-none"
+               style="font-family:'Playfair Display',serif;">0</p>
+            <p class="text-white text-xs opacity-70 mt-0.5">punti oggi</p>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between text-white opacity-60 text-xs mb-1.5">
+              <span id="completed-count">0 completate</span>
+              <span id="total-actions-count">7 totali</span>
+            </div>
+            <div class="w-full rounded-full h-2.5" style="background:rgba(255,255,255,0.18);">
+              <div id="daily-progress-bar" class="bar-fill h-full"
+                   style="background:var(--pale); width:0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="actions-list" class="flex flex-col gap-3" role="list"></div>
+
+      <p class="text-center text-xs mt-5" style="color: var(--text-muted);">
+        Tocca un'azione per registrarla · Le card resettano ogni giorno
+      </p>
+    </section>
+
+    <!-- ======================================================
+         TAB 2 — PROGRESSI
+    ====================================================== -->
+    <section id="content-progressi" class="tab-content pt-2" role="tabpanel">
+
+      <div id="badge-card"
+           class="badge-card-germoglio rounded-3xl p-6 mt-2 mb-4 text-white relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-36 h-36 rounded-full" style="background:rgba(255,255,255,0.07)"></div>
+        <div class="absolute -bottom-8 -left-8 w-28 h-28 rounded-full" style="background:rgba(255,255,255,0.05)"></div>
+        <div class="absolute bottom-4 right-6 w-14 h-14 rounded-full border-2" style="border-color:rgba(255,255,255,0.12)"></div>
+        <div class="relative">
+          <p class="text-xs uppercase tracking-widest opacity-70 mb-2">Il tuo livello attuale</p>
+          <div class="flex items-center gap-4 mb-4">
+            <span id="badge-icon" class="text-5xl drop-shadow">🌱</span>
+            <div>
+              <h2 id="badge-title" class="text-2xl text-white leading-tight">Germoglio</h2>
+              <p id="badge-subtitle" class="text-sm opacity-70 mt-0.5">Ogni grande foresta nasce da un seme</p>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <p id="total-score-big" class="text-5xl font-black leading-none"
+               style="font-family:'Playfair Display',serif;">0</p>
+            <p class="text-base opacity-60">punti totali</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold" style="color:var(--text);">Prossimo livello</p>
+          <p id="next-badge-label" class="text-sm font-bold" style="color:var(--green);">Albero 🌳</p>
+        </div>
+        <div class="w-full rounded-full h-3 mb-1.5" style="background:#F3F4F6;">
+          <div id="level-bar" class="bar-fill h-full"
+               style="background:linear-gradient(90deg,var(--light),var(--pale)); width:0%;"></div>
+        </div>
+        <div class="flex justify-between text-xs" style="color:var(--text-muted);">
+          <span id="level-current-label">0 pt</span>
+          <span id="level-target-label">51 pt</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p class="text-2xl mb-2">📅</p>
+          <p id="stat-days" class="text-3xl font-black leading-none mb-0.5"
+             style="color:var(--forest); font-family:'Playfair Display',serif;">0</p>
+          <p class="text-xs" style="color:var(--text-muted);">Giorni attivi</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p class="text-2xl mb-2">✅</p>
+          <p id="stat-actions" class="text-3xl font-black leading-none mb-0.5"
+             style="color:var(--forest); font-family:'Playfair Display',serif;">0</p>
+          <p class="text-xs" style="color:var(--text-muted);">Azioni totali</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p class="text-2xl mb-2">🌍</p>
+          <p id="stat-co2" class="text-3xl font-black leading-none mb-0.5"
+             style="color:var(--forest); font-family:'Playfair Display',serif;">0g</p>
+          <p class="text-xs" style="color:var(--text-muted);">CO₂ risparmiata*</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <p class="text-2xl mb-2">💧</p>
+          <p id="stat-water" class="text-3xl font-black leading-none mb-0.5"
+             style="color:var(--forest); font-family:'Playfair Display',serif;">0 L</p>
+          <p class="text-xs" style="color:var(--text-muted);">Acqua risparmiata*</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-3">
+        <h3 class="text-sm font-bold mb-3" style="color:var(--text);">🎯 Obiettivi Agenda 2030 collegati</h3>
+        <div class="flex flex-wrap gap-2">
+          <span class="sdg-pill" style="background:#4C9BE8;">SDG 3 · Salute</span>
+          <span class="sdg-pill" style="background:#26BDE2;">SDG 6 · Acqua</span>
+          <span class="sdg-pill" style="background:#FCC30B; color:#333;">SDG 7 · Energia</span>
+          <span class="sdg-pill" style="background:#FD9D24;">SDG 11 · Città</span>
+          <span class="sdg-pill" style="background:#3F7E44;">SDG 12 · Consumo</span>
+          <span class="sdg-pill" style="background:#48773C;">SDG 13 · Clima</span>
+          <span class="sdg-pill" style="background:#0A97D9;">SDG 14 · Oceani</span>
+          <span class="sdg-pill" style="background:#56C02B;">SDG 15 · Terra</span>
+        </div>
+      </div>
+
+      <p class="text-center text-xs pb-2" style="color:var(--text-muted);">
+        *Stime simboliche a scopo puramente didattico
+      </p>
+    </section>
+
+    <!-- ======================================================
+         TAB 3 — CLASSIFICA
+    ====================================================== -->
+    <section id="content-classifica" class="tab-content pt-2" role="tabpanel">
+
+      <div class="text-center mt-2 mb-5">
+        <h2 class="text-xl leading-snug" style="color:var(--forest);">Classifica della Scuola</h2>
+        <p class="text-xs mt-1" style="color:var(--text-muted);">Settimana corrente · ITIP Luigi Bucci di Faenza</p>
+      </div>
+
+      <div id="podium-container" class="flex items-end justify-center gap-2 mb-6 px-2"></div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <p class="text-sm font-bold" style="color:var(--text);">Classifica completa</p>
+          <p class="text-xs" style="color:var(--text-muted);">4 classi partecipanti</p>
+        </div>
+        <div id="leaderboard-table" class="divide-y divide-gray-50"></div>
+      </div>
+
+      <div class="rounded-2xl p-5 text-center"
+           style="background: linear-gradient(135deg, rgba(27,67,50,0.07), rgba(82,183,136,0.10));">
+        <p class="text-3xl mb-2">🌍</p>
+        <p class="font-bold mb-1" style="color:var(--forest);">Ogni azione conta!</p>
+        <p class="text-sm" style="color:var(--text-soft);">
+          Invita i tuoi compagni a completare più azioni eco-sostenibili per scalare la classifica.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       MODAL — SELEZIONE CLASSE
+  ============================================================ -->
+  <div id="class-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Seleziona la tua classe">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+
+      <div class="text-center mb-5">
+        <p class="text-4xl mb-2">🏫</p>
+        <h3 class="text-lg font-bold" style="color:var(--text);">Seleziona la tua classe</h3>
+        <p class="text-sm mt-1" style="color:var(--text-muted);">
+          Ogni classe ha i propri progressi indipendenti
+        </p>
+      </div>
+
+      <!-- Griglia classi (generata da JS) -->
+      <div id="class-options-list" class="flex flex-col gap-2.5 mb-5"></div>
+
+      <button onclick="closeClassModal()"
+        class="w-full py-3 rounded-2xl font-bold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all active:scale-95">
+        Annulla
+      </button>
+    </div>
+  </div>
+  <script>
+    document.getElementById('class-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeClassModal();
+    });
+  </script>
+
+  <!-- ============================================================
+       MODAL — RESET
+  ============================================================ -->
+  <div id="reset-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Opzioni di reset">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="text-center mb-5">
+        <p class="text-4xl mb-2">⚙️</p>
+        <h3 class="text-lg font-bold" style="color:var(--text);">Opzioni</h3>
+        <p class="text-sm mt-1" id="reset-modal-subtitle" style="color:var(--text-muted);">Scegli cosa vuoi resettare</p>
+      </div>
+      <div class="flex flex-col gap-3">
+        <button onclick="handleResetDaily()"
+          class="w-full py-3.5 rounded-2xl font-bold text-sm text-white transition-all active:scale-95"
+          style="background: var(--green);">
+          🌅 Reset azioni di oggi
+          <span class="block text-xs font-normal opacity-80 mt-0.5">I punti totali vengono mantenuti</span>
+        </button>
+        <button onclick="handleResetAll()"
+          class="w-full py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-95 border-2 border-red-200 text-red-500 hover:bg-red-50">
+          🗑️ Reset completo questa classe
+          <span class="block text-xs font-normal opacity-80 mt-0.5">Azzera tutti i dati della classe selezionata</span>
+        </button>
+        <button onclick="closeResetModal()"
+          class="w-full py-3 rounded-2xl font-bold text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 transition-all active:scale-95">
+          Annulla
+        </button>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('reset-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeResetModal();
+    });
+  </script>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
